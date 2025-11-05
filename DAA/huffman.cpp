@@ -1,88 +1,84 @@
 #include <iostream>
+#include <vector>
 #include <queue>
 #include <unordered_map>
-#include <vector>
 using namespace std;
 
-// Node structure for Huffman tree
-struct Node {
-    char ch;        // character
-    int freq;       // frequency
-    Node *left;     // left child
-    Node *right;    // right child
+//Node structure for hufffamn tree
 
-    Node(char c, int f) {
+struct Node{
+    char ch;
+    int freq;
+    Node* left;
+    Node* right;
+
+    Node(char c, int f){
         ch = c;
         freq = f;
         left = right = nullptr;
     }
 };
 
-// Custom comparator for min-heap
-struct Compare {
-    bool operator()(Node* left, Node* right) {
-        return left->freq > right->freq;  // smaller freq = higher priority
+struct Compare{
+    bool operator()(Node* a, Node* b){
+        return a->freq > b->freq;
     }
 };
 
-// Recursive function to generate Huffman Codes
-void generateCodes(Node* root, string code, unordered_map<char, string> &huffmanCodes) {
-    if (!root) return;
+void generateCodes(Node* root, string code, unordered_map<char, string> &huffmanCode ){
+    if(!root)
+        return;
+    if(!root->left && !root->right)
+        huffmanCode[root->ch] = code;
 
-    // Leaf node → store code
-    if (!root->left && !root->right) {
-        huffmanCodes[root->ch] = code;
-    }
-
-    // Traverse left → add "0"
-    generateCodes(root->left, code + "0", huffmanCodes);
-    // Traverse right → add "1"
-    generateCodes(root->right, code + "1", huffmanCodes);
+    generateCodes(root->left, code +"0", huffmanCode);
+    generateCodes(root->right, code + "1", huffmanCode);
 }
 
-// Huffman Encoding function
-unordered_map<char, string> huffmanEncoding(vector<char> &chars, vector<int> &freqs) {
-    // Step 1: Create a min-heap
-    priority_queue<Node*, vector<Node*>, Compare> minHeap;
+void buildHuffmanTree(string text){
+    unordered_map<char, int> freq;
+    for(char ch : text)
+        freq[ch]++;
+    
 
-    for (size_t i = 0; i < chars.size(); i++) {
-        minHeap.push(new Node(chars[i], freqs[i]));
+    priority_queue<Node*, vector<Node*>, Compare> pq;
+    for(auto pair:freq)
+        pq.push(new Node(pair.first, pair.second));
+
+    while(pq.size() != 1){
+        Node *left = pq.top(); pq.pop();
+        Node *right = pq.top(); pq.pop();
+
+        Node *sum = new Node('\0', left->freq+right->freq);
+        sum->left = left;
+        sum->right = right;
+
+        pq.push(sum);
     }
 
-    // Step 2: Build the Huffman Tree
-    while (minHeap.size() > 1) {
-        // Extract 2 smallest nodes
-        Node* left = minHeap.top(); minHeap.pop();
-        Node* right = minHeap.top(); minHeap.pop();
+    Node* root = pq.top();
+    
+    unordered_map<char, string> huffmanCode;
+    generateCodes(root, "", huffmanCode);
 
-        // Create new internal node
-        Node* merged = new Node('$', left->freq + right->freq);
-        merged->left = left;
-        merged->right = right;
+    cout<<"\n Huffman codes: \n";
+    for(auto pair:huffmanCode)
+        cout<< pair.first<<" -> "<< pair.second<< '\n';
 
-        // Push back to heap
-        minHeap.push(merged);
-    }
+    string encodedString = "";
+    for(char ch: text)
+        encodedString += huffmanCode[ch];
 
-    // Step 3: Generate Huffman codes
-    unordered_map<char, string> huffmanCodes;
-    Node* root = minHeap.top();
-    generateCodes(root, "", huffmanCodes);
+    cout<<"\n Original text: " << text << '\n';
+    cout<<"Encoded text:"<< encodedString<<'\n';
 
-    return huffmanCodes;
+
 }
 
-int main() {
-    vector<char> chars = {'a', 'b', 'c', 'd', 'e', 'f'};
-    vector<int> freqs = {5, 9, 12, 13, 16, 45};
-
-    unordered_map<char, string> huffmanCodes = huffmanEncoding(chars, freqs);
-
-    cout << "Huffman Codes:\n";
-    for (auto &pair : huffmanCodes) {
-        cout << pair.first << " : " << pair.second << "\n";
-    }
-
+int main(){
+    string text;
+    cout<< "Enter text to encode: ";
+    getline(cin, text);
+    buildHuffmanTree(text);
     return 0;
 }
-

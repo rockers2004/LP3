@@ -1,66 +1,61 @@
-#include <stdio.h>
-#include <stdlib.h>
-int max(int a, int b) {
-    return (a > b) ? a : b;
-}
-int knapsack(int W, int wt[], int val[], int n) {
-    int i, w;
-    int **dp = (int**)malloc((n+1) * sizeof(int*));
-    // Allocate memory for DP table
-    for (i = 0; i <= n; i++)
-        dp[i] = (int*)malloc((W+1) * sizeof(int));
-    // Build table dp[][] in bottom-up manner
-    for (i = 0; i <= n; i++) {
-        for (w = 0; w <= W; w++) {
-            if (i == 0 || w == 0)
-                dp[i][w] = 0;
-            else if (wt[i-1] <= w)
-                dp[i][w] = max(val[i-1] + dp[i-1][w-wt[i-1]], dp[i-1][w]);
+#include <iostream>
+#include <vector>
+#include <chrono>
+using namespace std;
+using namespace std::chrono;
+
+struct Item {
+    int value, weight;
+};
+
+int knapsackDP(int capacity, const vector<Item>& items) {
+    int n = items.size();
+    vector<vector<int>> dp(n + 1, vector<int>(capacity + 1, 0));
+
+    for (int i = 1; i <= n; i++) {
+        for (int w = 0; w <= capacity; w++) {
+            if (items[i - 1].weight <= w)
+                dp[i][w] = max(dp[i - 1][w],
+                               items[i - 1].value + dp[i - 1][w - items[i - 1].weight]);
             else
-                dp[i][w] = dp[i-1][w];
+                dp[i][w] = dp[i - 1][w];
         }
     }
-    int result = dp[n][W];
-    int max_val = result; // Store result before backtracking
-                          // Print which items are selected
-    printf("Selected items: ");
-    w = W;
-    for (i = n; i > 0 && result > 0; i--) {
-        if (result != dp[i-1][w]) {
-            printf("%d ", i);
-            result -= val[i-1];
-            w -= wt[i-1];
-        }
-    }
-    printf("\n");
-    // Free allocated memory
-    for (i = 0; i <= n; i++)
-        free(dp[i]);
-    free(dp);
-    return max_val;
+
+    return dp[n][capacity];
 }
+
 int main() {
-    int n, W;
-    printf("Enter number of items: ");
-    scanf("%d"
-            , &n);
-    printf("Enter knapsack capacity: ");
-    scanf("%d"
-            , &W);
-    int *val = (int*)malloc(n * sizeof(int));
-    int *wt = (int*)malloc(n * sizeof(int));
-    printf("Enter values and weights:\n");
+    int n, capacity;
+    cout << "Enter number of items: ";
+    cin >> n;
+
+    vector<Item> items(n);
     for (int i = 0; i < n; i++) {
-        printf("Item %d - Value: ", i+1);
-        scanf("%d"
-                , &val[i]);
-        printf("Item %d - Weight: ", i+1);
-        scanf("%d"
-                , &wt[i]);
+        cout << "Enter value and weight for item " << i + 1 << ": ";
+        cin >> items[i].value >> items[i].weight;
     }
-    int max_value = knapsack(W, wt, val, n);
-    printf("Maximum value: %d\n", max_value);
-    free(val);
-    free(wt);
+
+    cout << "Enter knapsack capacity: ";
+    cin >> capacity;
+
+    // Measure time
+    auto start = high_resolution_clock::now();
+    int maxValue = knapsackDP(capacity, items);
+    auto end = high_resolution_clock::now();
+
+    // Compute time and space
+    double duration = duration_cast<nanoseconds>(end - start).count();
+    size_t spaceUsed = sizeof(int) * (items.size() + 1) * (capacity + 1)
+                     + sizeof(Item) * items.size();
+
+    cout << "\n-----------------------------------------\n";
+    cout << "          [ 0-1 Knapsack Results ]       \n";
+    cout << "-----------------------------------------\n";
+    cout << "Maximum Value   : " << maxValue << endl;
+    cout << "Execution Time  : " << duration << " ns\n";
+    cout << "Estimated Space : " << spaceUsed << " bytes\n";
+    cout << "-----------------------------------------\n";
+
     return 0;
 }
