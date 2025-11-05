@@ -3,44 +3,34 @@ pragma solidity ^0.8.0;
 
 contract StudentData {
     struct Student {
-        uint id;
+        uint256 rollNo;
         string name;
-        uint age;
-        string course;
+        uint8 age;
     }
 
     Student[] public students;
-    mapping(uint => bool) private studentExists;
 
-    event StudentAdded(uint id, string name, uint age, string course);
-
-    function addStudent(
-        uint _id,
-        string calldata _name,
-        uint _age,
-        string calldata _course
-    ) external {
-        require(!studentExists[_id], "Student ID already exists.");
-        students.push(Student(_id, _name, _age, _course));
-        studentExists[_id] = true;
-        emit StudentAdded(_id, _name, _age, _course);
+    // Add new student
+    function addStudent(uint256 _rollNo, string memory _name, uint8 _age) public {
+        students.push(Student(_rollNo, _name, _age));
     }
 
-    function getStudent(uint index) external view returns (uint, string memory, uint, string memory) {
-        require(index < students.length, "Invalid index.");
-        Student memory student = students[index];
-        return (student.id, student.name, student.age, student.course);
+    // Get student by index
+    function getStudent(uint256 index) public view returns (uint256, string memory, uint8) {
+        require(index < students.length, "Invalid index");
+        Student memory s = students[index];
+        return (s.rollNo, s.name, s.age);
     }
 
-    function getStudentCount() external view returns (uint) {
+    // Total number of students
+    function getTotalStudents() public view returns (uint256) {
         return students.length;
     }
 
+    // Fallback function - to handle unexpected calls or ether transfers
     fallback() external payable {
-        revert("Fallback called - function does not exist.");
+        // You can log or revert here if needed
     }
 
-    receive() external payable {
-        // Accept ETH silently
-    }
+    receive() external payable {}
 }

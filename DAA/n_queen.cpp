@@ -19,12 +19,12 @@ int Solve(int row) {
 
     for (int col = 0; col < n; col++) {
         if (isSafe(row, col)) {
-            board[row] = col;         // ✅ correct assignment
-            if (Solve(row + 1))       // ✅ recursive call
+            board[row] = col;
+            if (Solve(row + 1))
                 return 1;
         }
     }
-    return 0; // no valid column found, backtrack
+    return 0; // backtrack
 }
 
 int main() {
@@ -36,9 +36,21 @@ int main() {
         return 0;
     }
 
-    board = new int[n];  // ✅ proper allocation (global board)
+    board = new int[n];  // allocate memory for board
 
-    if (Solve(0)) {
+    int firstCol;
+    cout << "Enter the column for the first queen (0 to " << n - 1 << "): ";
+    cin >> firstCol;
+
+    if (firstCol < 0 || firstCol >= n) {
+        cout << "Invalid column! Must be between 0 and " << n - 1;
+        delete[] board;
+        return 0;
+    }
+
+    board[0] = firstCol; // user-placed first queen
+
+    if (Solve(1)) {  // start solving from row 1
         cout << "\nSolution:\n";
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++)
@@ -46,9 +58,9 @@ int main() {
             cout << endl;
         }
     } else {
-        cout << "No solution exists.";
+        cout << "\nNo solution exists with first queen at (row 0, column " << firstCol << ").\n";
     }
 
-    delete[] board; // cleanup
+    delete[] board;
     return 0;
 }
